@@ -1,6 +1,6 @@
 import requests
 APP_ACCESS_TOKEN = '1943018362.461a955.12a586002daf46859def8db521710a5f'
-# Token Owner:pankhurisingh19ju
+# Token Owner:pankhurisingh
 BASE_URL = 'https://api.instagram.com/v1/'
 
 
@@ -59,3 +59,25 @@ def get_user_info(insta_username):
     else:
         print 'Status code other than 200 received!'
 
+
+def start_bot():
+    while True:
+        print '\n'
+        print 'Hey! Welcome to InstaBot!'
+        print 'Here are your menu options:'
+        print "a.Get your own details\n"
+        print "b.Get details of a user by username\n"
+        print "c.Exit"
+
+        choice = raw_input("Enter you choice: ")
+        if choice == "a":
+            self_info()
+        elif choice == "b":
+            insta_username = raw_input("Enter the username of the user: ")
+            get_user_info(insta_username)
+        elif choice == "c":
+            exit()
+        else:
+            print "wrong choice"
+
+start_bot()
