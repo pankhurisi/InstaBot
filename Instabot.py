@@ -1,5 +1,7 @@
 import requests
 import urllib
+from textblob import TextBlob
+from textblob.sentiments import NaiveBayesAnalyzer
 
 APP_ACCESS_TOKEN = '1943018362.461a955.12a586002daf46859def8db521710a5f'
 # Token Owner: pankhurisingh
@@ -160,8 +162,8 @@ def get_list_of_likes(insta_username):
 
     if like_info['meta']['code'] == 200:
         if len(like_info['data']):
-            for x in range(0, len(like_info['data'])):
-                print like_info['data'][x]['username']
+            for i in range(0, len(like_info['data'])):
+                print like_info['data'][i]['username']
         else:
             print "no likes yet!"
     else:
@@ -193,13 +195,45 @@ def get_list_of_comments(insta_username):
 
     if comment_info['meta']['code'] == 200:
         if len(comment_info['data']):
-            for x in range(0, len(comment_info['data'])):
-                print "comment: %s || User: %s" % (comment_info['data'][x]['text'],
-                                                   comment_info['data'][x]['from']['username'])
+            for i in range(0, len(comment_info['data'])):
+                print "comment: %s || User: %s" % (comment_info['data'][i]['text'],
+                                                   comment_info['data'][i]['from']['username'])
         else:
             print "no comments yet!"
     else:
         print 'Status code other than 200 received!'
+
+
+
+def negative_comment_deletion(insta_username):
+    media_id = get_other_user_post_id(insta_username)
+    request_url = (BASE_URL + 'media/%s/comments/?access_token=%s') % (media_id, APP_ACCESS_TOKEN)
+    print 'Get request url : %s' % request_url
+    comment_information = requests.get(request_url).json()
+
+    if comment_information ['meta']['code'] == 200:
+        if len(comment_information['data']):
+            for i in range(0, len(comment_information['data'])):
+                comment_id = comment_information['data'][i]['id']
+                comment_text = comment_information['data'][i]['text']
+                blob = TextBlob(comment_text, analyzer=NaiveBayesAnalyzer())
+                if (blob.sentiment.p_neg > blob.sentiment.p_pos):
+                    print 'Negative comment : %s' % (comment_text)
+                    delete_url = (BASE_URL + 'media/%s/comments/%s/?access_token=%s') % (
+                    media_id, comment_id, APP_ACCESS_TOKEN)
+                    print 'DELETE request url : %s' % (delete_url)
+                    delete_info = requests.delete(delete_url).json()
+
+                    if delete_info['meta']['code'] == 200:
+                        print 'Comment successfully deleted!\n'
+                    else:
+                        print 'Unable to delete comment!'
+                else:
+                    print 'Positive comment : %s\n' % (comment_text)
+            else:
+                print 'There are no existing comments on the post!'
+        else:
+            print 'Status code other than 200 received!'
 
 
 def start_bot():
@@ -216,7 +250,8 @@ def start_bot():
         print "g.get my recent liked media\n"
         print "h.Get list of comments on recent post of a user using username\n"
         print "i.Get list of likes on recent post of a user using username\n"
-        print "j.Exit"
+        print "j delete the negative comments from comment list of a post\n"
+        print "k.Exit"
 
 # nested loop
         choice = raw_input("Enter you choice: ")
@@ -245,6 +280,9 @@ def start_bot():
             insta_username = raw_input("Enter the username of the user: ")
             get_list_of_likes(insta_username)
         elif choice == "j":
+            insta_username = raw_input("Enter the username of the user: ")
+            negative_comment_deletion(insta_username)
+        elif choice == "k":
             exit()
         else:
             print "wrong choice"
