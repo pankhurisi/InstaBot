@@ -4,7 +4,7 @@ from textblob import TextBlob
 from textblob.sentiments import NaiveBayesAnalyzer
 
 APP_ACCESS_TOKEN = '1943018362.461a955.12a586002daf46859def8db521710a5f'
-# Token Owner: pankhurisingh
+# Token Owner: My own token
 BASE_URL = 'https://api.instagram.com/v1/'
 
 
@@ -204,7 +204,6 @@ def get_list_of_comments(insta_username):
         print 'Status code other than 200 received!'
 
 
-
 def negative_comment_deletion(insta_username):
     media_id = get_other_user_post_id(insta_username)
     request_url = (BASE_URL + 'media/%s/comments/?access_token=%s') % (media_id, APP_ACCESS_TOKEN)
@@ -213,15 +212,17 @@ def negative_comment_deletion(insta_username):
 
     if comment_information ['meta']['code'] == 200:
         if len(comment_information['data']):
+
             for i in range(0, len(comment_information['data'])):
                 comment_id = comment_information['data'][i]['id']
                 comment_text = comment_information['data'][i]['text']
                 blob = TextBlob(comment_text, analyzer=NaiveBayesAnalyzer())
+
                 if (blob.sentiment.p_neg > blob.sentiment.p_pos):
                     print 'Negative comment : %s' % (comment_text)
-                    delete_url = (BASE_URL + 'media/%s/comments/%s/?access_token=%s') % (
-                    media_id, comment_id, APP_ACCESS_TOKEN)
-                    print 'DELETE request url : %s' % (delete_url)
+                    delete_url = (BASE_URL + 'media/%s/comments/%s/?access_token=%s') % \
+                                 (media_id, comment_id, APP_ACCESS_TOKEN)
+                    print 'DELETE request url : %s' % delete_url
                     delete_info = requests.delete(delete_url).json()
 
                     if delete_info['meta']['code'] == 200:
